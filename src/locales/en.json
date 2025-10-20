@@ -1,0 +1,56 @@
+{
+  "header": {
+    "title": "Hive Trading Dashboard",
+    "lastUpdate": "Last update",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing..."
+  },
+  "userSelector": {
+    "title": "User to Analyze",
+    "placeholder": "Enter Hive username",
+    "analyze": "Analyze",
+    "loading": "Loading...",
+    "note": "Note: Analysis may take several minutes for users with extensive trading history. Only HIVE/HBD exchange operations are analyzed."
+  },
+  "tradingSummary": {
+    "title": "Trading Summary",
+    "hbdSpent": "HBD Spent",
+    "hbdReceived": "HBD Received",
+    "netProfit": "Net Profit",
+    "netLoss": "Net Loss",
+    "operations": "Operations"
+  },
+  "priceDisplay": {
+    "title": "Reference Prices",
+    "notAvailable": "Not available",
+    "fallbackNote": "Showing approximate prices due to API limitations",
+    "apiError": "Could not fetch current prices"
+  },
+  "dateFilter": {
+    "title": "Date Filters",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "clearFilters": "Clear Filters"
+  },
+  "operationsTable": {
+    "title": "Operations History",
+    "date": "Date",
+    "type": "Type",
+    "buy": "Buy",
+    "sell": "Sell",
+    "price": "Price",
+    "noOperations": "No operations found",
+    "adjustFilters": "Adjust date filters to see more results"
+  },
+  "footer": {
+    "description": "Trading analysis dashboard for the Hive blockchain",
+    "updateInterval": "Data updated automatically every 10 minutes"
+  },
+  "loading": {
+    "title": "Loading Hive data...",
+    "subtitle": "Connecting to blockchain"
+  },
+  "common": {
+    "noUserSelected": "No user selected"
+  }
+}
