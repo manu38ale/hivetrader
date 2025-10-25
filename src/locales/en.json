@@ -1,4 +1,11 @@
 {
+  "loading": {
+    "title": "Loading",
+    "subtitle": "Please wait while we load your data",
+    "fetchingData": "Fetching data from Hive blockchain",
+    "connectingToHive": "Connecting to Hive API",
+    "processingOperations": "Processing trading operations"
+  },
   "header": {
     "title": "Hive Trading Dashboard",
     "lastUpdate": "Last update",
@@ -45,10 +52,6 @@
   "footer": {
     "description": "Trading analysis dashboard for the Hive blockchain",
     "updateInterval": "Data updated automatically every 10 minutes"
-  },
-  "loading": {
-    "title": "Loading Hive data...",
-    "subtitle": "Connecting to blockchain"
   },
   "common": {
     "noUserSelected": "No user selected"

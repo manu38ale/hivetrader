@@ -7,7 +7,7 @@ import { PriceDisplay } from './components/PriceDisplay';
 import { DateFilter } from './components/DateFilter';
 import { UserSelector } from './components/UserSelector';
 import { OperationsTable } from './components/OperationsTable';
-import { LoadingSpinner } from './components/LoadingSpinner';
+import { LoadingSpinner, LoadingOverlay } from './components/LoadingSpinner';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -26,7 +26,8 @@ function App() {
     targetUser,
     setDateFilter,
     setTargetUser,
-    refreshData
+    refreshData,
+    loadingStatus
   } = useHiveData();
 
   const dateLocale = language === 'es' ? es : enUS;
@@ -41,11 +42,14 @@ function App() {
   }, [isLoading, hasInitiallyLoaded]);
 
   if (!hasInitiallyLoaded && isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner statusMessage={loadingStatus} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Loading Overlay */}
+      <LoadingOverlay isLoading={isLoading} statusMessage={loadingStatus} />
+      
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
