@@ -1,6 +1,50 @@
 const HIVE_API_URL = 'https://api.hive.blog';
 import { FillOrderOperation, DebugInfo } from '../types/hive';
 
+export interface OrderBookLevel {
+  price: number;
+  hive: number;
+  hbd: number;
+}
+
+export interface OrderBookSnapshot {
+  bids: OrderBookLevel[];
+  asks: OrderBookLevel[];
+}
+
+export async function fetchMedianPriceFeed(): Promise<{ base: string; quote: string }> {
+  const raw: unknown = await callHiveAPI('condenser_api.get_current_median_history_price', []);
+  if (!raw || typeof raw !== 'object' || !('base' in raw) || !('quote' in raw)
+    || typeof raw.base !== 'string' || typeof raw.quote !== 'string') {
+    throw new Error('Invalid Hive median price feed response');
+  }
+  return { base: raw.base, quote: raw.quote };
+}
+
+export async function fetchOrderBook(signal?: AbortSignal): Promise<OrderBookSnapshot> {
+  const raw: unknown = await callHiveAPI('condenser_api.get_order_book', [50], signal);
+  if (!raw || typeof raw !== 'object' || !('bids' in raw) || !('asks' in raw)) {
+    throw new Error('Invalid Hive order book response');
+  }
+  const parseLevels = (levels: unknown): OrderBookLevel[] => {
+    if (!Array.isArray(levels)) throw new Error('Invalid order book levels');
+    return levels.map((level: unknown) => {
+      if (!level || typeof level !== 'object' || !('real_price' in level)
+        || !('hive' in level) || !('hbd' in level)) {
+        throw new Error('Invalid order book level');
+      }
+      const price = Number(level.real_price);
+      const hive = Number(level.hive) / 1000;
+      const hbd = Number(level.hbd) / 1000;
+      if (![price, hive, hbd].every(Number.isFinite) || price <= 0 || hive < 0 || hbd < 0) {
+        throw new Error('Invalid order book amounts');
+      }
+      return { price, hive, hbd };
+    });
+  };
+  return { bids: parseLevels(raw.bids), asks: parseLevels(raw.asks) };
+}
+
 interface HiveRPCRequest {
   jsonrpc: string;
   method: string;
@@ -15,7 +59,7 @@ interface HiveRPCResponse {
   error?: any;
 }
 
-async function callHiveAPI(method: string, params: any[]): Promise<any> {
+export async function callHiveAPI(method: string, params: any[], signal?: AbortSignal): Promise<any> {
   const request: HiveRPCRequest = {
     jsonrpc: '2.0',
     method,
@@ -26,6 +70,7 @@ async function callHiveAPI(method: string, params: any[]): Promise<any> {
   try {
     const response = await fetch(HIVE_API_URL, {
       method: 'POST',
+      signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -44,6 +89,7 @@ async function callHiveAPI(method: string, params: any[]): Promise<any> {
 
     return data.result;
   } catch (error) {
+    if (signal?.aborted) throw error;
     console.error('Error calling Hive API:', error);
     throw error;
   }

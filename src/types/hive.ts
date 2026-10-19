@@ -16,8 +16,8 @@ export interface TradingSummary {
 }
 
 export interface PriceData {
-  hive: { usd: number };
-  hive_dollar: { usd: number };
+  hiveInHbd: number;
+  hbdInHive: number;
 }
 
 export interface DateFilter {

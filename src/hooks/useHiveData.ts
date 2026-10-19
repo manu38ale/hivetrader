@@ -1,44 +1,64 @@
-import { useState, useEffect, useCallback } from 'react';
-import { FillOrderOperation, PriceData, DateFilter, TradingSummary, DebugInfo } from '../types/hive';
-import { fetchManuphotosOperations } from '../utils/hiveApi';
-import { fetchCurrentPrices } from '../utils/priceApi';
-import { calculateTradingSummary } from '../utils/calculations';
-import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
-import { subMonths } from 'date-fns';
-import { fetchUserOperations } from '../utils/hiveApi';
+import { useState, useEffect, useCallback } from "react";
+import {
+  FillOrderOperation,
+  PriceData,
+  DateFilter,
+  TradingSummary,
+  DebugInfo,
+} from "../types/hive";
+import { fetchCurrentPrices } from "../utils/priceApi";
+import { calculateTradingSummary } from "../utils/calculations";
+import { isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { subMonths } from "date-fns";
+import { fetchUserOperations } from "../utils/hiveApi";
+import { useLanguage } from "./useLanguage";
 
 export function useHiveData() {
-  const [targetUser, setTargetUser] = useState<string>('');
+  const { t } = useLanguage();
+  const [targetUser, setTargetUser] = useState<string>("");
   const [operations, setOperations] = useState<FillOrderOperation[]>([]);
-  const [filteredOperations, setFilteredOperations] = useState<FillOrderOperation[]>([]);
+  const [filteredOperations, setFilteredOperations] = useState<
+    FillOrderOperation[]
+  >([]);
   const [priceData, setPriceData] = useState<PriceData | null>(null);
   const [summary, setSummary] = useState<TradingSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPriceLoading, setIsPriceLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [dateFilter, setDateFilter] = useState<DateFilter>({ 
-    startDate: subMonths(new Date(), 6), 
-    endDate: new Date() 
+  const [dateFilter, setDateFilter] = useState<DateFilter>({
+    startDate: subMonths(new Date(), 6),
+    endDate: new Date(),
   });
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState<string>("");
 
   const loadOperations = useCallback(async () => {
     if (!targetUser.trim()) return;
-    
+
     try {
       setIsLoading(true);
+      setLoadingStatus(t("loading.fetchingData"));
       console.log(`Loading operations for ${targetUser}...`);
-      const { operations: ops, debugInfo: debug } = await fetchUserOperations(targetUser, dateFilter);
-      console.log('Operations loaded:', ops.length);
+
+      setLoadingStatus(t("loading.connectingToHive"));
+      const { operations: ops, debugInfo: debug } = await fetchUserOperations(
+        targetUser,
+        dateFilter,
+      );
+
+      setLoadingStatus(t("loading.processingOperations"));
+      console.log("Operations loaded:", ops.length);
+
       setOperations(ops);
       setDebugInfo(debug);
       setLastUpdate(new Date());
     } catch (error) {
-      console.error('Error loading operations:', error);
+      console.error("Error loading operations:", error);
     } finally {
       setIsLoading(false);
+      setLoadingStatus("");
     }
-  }, [targetUser, dateFilter]);
+  }, [targetUser, dateFilter, t]);
 
   const loadPrices = useCallback(async () => {
     try {
@@ -46,12 +66,8 @@ export function useHiveData() {
       const prices = await fetchCurrentPrices();
       setPriceData(prices);
     } catch (error) {
-      console.error('Error loading prices:', error);
-      // Set fallback prices if API fails completely
-      setPriceData({
-        hive: { usd: 0.25 },
-        hive_dollar: { usd: 1.00 }
-      });
+      console.error("Error loading prices:", error);
+      setPriceData(null);
     } finally {
       setIsPriceLoading(false);
     }
@@ -62,17 +78,19 @@ export function useHiveData() {
 
     if (dateFilter.startDate) {
       const startDate = startOfDay(dateFilter.startDate);
-      filtered = filtered.filter(op => 
-        isAfter(new Date(op.timestamp), startDate) || 
-        new Date(op.timestamp).getTime() === startDate.getTime()
+      filtered = filtered.filter(
+        (op) =>
+          isAfter(new Date(op.timestamp), startDate) ||
+          new Date(op.timestamp).getTime() === startDate.getTime(),
       );
     }
 
     if (dateFilter.endDate) {
       const endDate = endOfDay(dateFilter.endDate);
-      filtered = filtered.filter(op => 
-        isBefore(new Date(op.timestamp), endDate) || 
-        new Date(op.timestamp).getTime() === endDate.getTime()
+      filtered = filtered.filter(
+        (op) =>
+          isBefore(new Date(op.timestamp), endDate) ||
+          new Date(op.timestamp).getTime() === endDate.getTime(),
       );
     }
 
@@ -94,15 +112,18 @@ export function useHiveData() {
     applyDateFilter();
   }, [applyDateFilter]);
 
-  // Auto-refresh cada 2 minutos
+  // Auto-refresh cada 10 minutos
   useEffect(() => {
     // Solo auto-refresh si hay un usuario seleccionado
     if (!targetUser.trim()) return;
-    
-    const interval = setInterval(() => {
-      loadOperations();
-      loadPrices();
-    }, 10 * 60 * 1000); // 10 minutos
+
+    const interval = setInterval(
+      () => {
+        loadOperations();
+        loadPrices();
+      },
+      10 * 60 * 1000,
+    ); // 10 minutos
 
     return () => clearInterval(interval);
   }, [targetUser, loadOperations, loadPrices]);
@@ -122,6 +143,7 @@ export function useHiveData() {
     refreshData: () => {
       loadOperations();
       loadPrices();
-    }
+    },
+    loadingStatus,
   };
 }

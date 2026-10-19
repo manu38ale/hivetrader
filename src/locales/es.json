@@ -1,4 +1,54 @@
 {
+  "navigation": {
+    "main": "Menú principal",
+    "analysis": "Análisis histórico",
+    "bot": "Trading del bot",
+    "skip": "Saltar al contenido"
+  },
+  "bot": {
+    "title": "Trading del bot",
+    "readOnly": "Cuenta dedicada · Mercado interno HIVE/HBD · Monitoreo de solo lectura",
+    "account": "Cuenta del bot",
+    "accountPlaceholder": "Nombre de la cuenta dedicada",
+    "monitor": "Monitorear",
+    "period": "Período del resultado y del volumen",
+    "periods": { "24h": "Últimas 24 horas", "7d": "Últimos 7 días", "30d": "Últimos 30 días", "all": "Todo el historial" },
+    "configure": "Ingresa la cuenta dedicada del bot o configura VITE_BOT_ACCOUNT para abrirla automáticamente. No se necesita ninguna clave privada.",
+    "summary": "Resumen general",
+    "balance": "Balance",
+    "available": "Disponible",
+    "reserved": "Reservado en órdenes",
+    "pnl": "Ganancia / pérdida del trading",
+    "pnlNote": "HBD neto de las operaciones + HIVE neto de las operaciones × mid actual. Incluye la posición no cerrada del período; no cuenta depósitos como ganancias ni mide la revalorización del inventario previo.",
+    "mid": "Mid del mercado interno",
+    "volumeHive": "Volumen del período en HIVE",
+    "volumeHbd": "Volumen del período en HBD",
+    "fills": "Ejecuciones del período",
+    "equity": "Valor actual de los fondos",
+    "excludes": "Sin savings ni Hive Power",
+    "volumeNote": "Volumen = compras + ventas, contado una vez por fill. El resultado es del período seleccionado, no el flujo neto de HBD ni el breaker diario del proceso.",
+    "historyUpdate": "Última consulta de ejecuciones",
+    "openOrders": "Órdenes abiertas",
+    "remaining": "Pendiente",
+    "expires": "Expira",
+    "noOrders": "La cuenta no tiene órdenes abiertas.",
+    "executed": "Operaciones realizadas",
+    "noFills": "No hay ejecuciones HIVE/HBD en el período seleccionado.",
+    "pagination": "Páginas de operaciones realizadas",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "loading": "Leyendo balances, órdenes e historial de la cuenta. El historial completo puede tardar.",
+    "refreshing": "Actualizando datos on-chain…",
+    "refreshNote": "Balances y órdenes cada 15 segundos; historial de ejecuciones cada 60 segundos. Solo muestra actividad real en cadena, no órdenes virtuales del modo paper.",
+    "errors": {
+      "invalidAccount": "Ingresa un nombre de cuenta Hive válido, sin @ ni espacios.",
+      "connection": "No se pudieron actualizar los datos de Hive. Se reintentará en 15 segundos; también puedes pulsar Actualizar.",
+      "invalidResponse": "Hive devolvió datos incompletos o inválidos. No se muestra un resultado parcial. Reintenta o selecciona un período más corto.",
+      "accountNotFound": "No existe esa cuenta en Hive. Revisa el nombre de la cuenta dedicada.",
+      "invalidBook": "El libro está vacío o no tiene precios válidos. No se puede valorar el inventario en HBD.",
+      "historyLimit": "El período supera 100.000 entradas de historial. Selecciona un período más corto; no se ha calculado un resultado truncado."
+    }
+  },
   "loading": {
     "title": "Loading",
     "subtitle": "Please wait while we load your data",
@@ -13,6 +63,7 @@
     "refreshing": "Actualizando..."
   },
   "userSelector": {
+    "botAccount": "Monitorear cuenta bot",
     "title": "Usuario a Analizar",
     "placeholder": "Ingresa el nombre de usuario de Hive",
     "analyze": "Analizar",
@@ -28,10 +79,10 @@
     "operations": "Operaciones"
   },
   "priceDisplay": {
-    "title": "Precios de Referencia",
+    "title": "Referencia on-chain",
     "notAvailable": "No disponible",
-    "fallbackNote": "Mostrando precios aproximados debido a limitaciones de la API",
-    "apiError": "No se pudieron obtener los precios actuales"
+    "source": "Fuente: feed mediano de Hive, expresado en HIVE/HBD, sin precios externos en dólares. El bot usa el libro del mercado interno, no este feed.",
+    "apiError": "No se pudo leer el feed de precios de Hive. No se muestran precios de respaldo."
   },
   "dateFilter": {
     "title": "Filtros de Fecha",
@@ -55,5 +106,16 @@
   },
   "common": {
     "noUserSelected": "Ningún usuario seleccionado"
+  },
+  "orderBook": {
+    "title": "Libro HIVE/HBD",
+    "readOnly": "Mercado interno · Solo lectura · Cada 15 s",
+    "mid": "Precio medio",
+    "spread": "Spread",
+    "bids": "Compras (bids)",
+    "asks": "Ventas (asks)",
+    "price": "HBD por HIVE",
+    "empty": "No hay órdenes en este lado del libro.",
+    "error": "No se pudo actualizar el libro. Se reintentará en 15 segundos."
   }
 }

@@ -23,3 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
+**/secrets/
+**/.secrets/
+*.secret
+*.secrets
+*.wif
+secrets.*
+*.key
+*.pem
+bot/.state/
+bot/backtest-results*.json

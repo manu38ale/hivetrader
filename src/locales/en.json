@@ -1,4 +1,54 @@
 {
+  "navigation": {
+    "main": "Main menu",
+    "analysis": "Historical analysis",
+    "bot": "Bot trading",
+    "skip": "Skip to content"
+  },
+  "bot": {
+    "title": "Bot trading",
+    "readOnly": "Dedicated account · Internal HIVE/HBD market · Read-only monitoring",
+    "account": "Bot account",
+    "accountPlaceholder": "Dedicated account name",
+    "monitor": "Monitor",
+    "period": "P&L and volume period",
+    "periods": { "24h": "Last 24 hours", "7d": "Last 7 days", "30d": "Last 30 days", "all": "All history" },
+    "configure": "Enter the dedicated bot account or set VITE_BOT_ACCOUNT to open it automatically. No private key is required.",
+    "summary": "Overview",
+    "balance": "Balance",
+    "available": "Available",
+    "reserved": "Reserved in orders",
+    "pnl": "Trading profit / loss",
+    "pnlNote": "Net HBD from fills + net HIVE from fills × current mid. Includes the period's unclosed position; deposits are not profits and prior inventory revaluation is excluded.",
+    "mid": "Internal market mid",
+    "volumeHive": "Period volume in HIVE",
+    "volumeHbd": "Period volume in HBD",
+    "fills": "Period executions",
+    "equity": "Current funds value",
+    "excludes": "Excludes savings and Hive Power",
+    "volumeNote": "Volume = buys + sells, counted once per fill. P&L applies to the selected period, not net HBD cash flow or the process's daily breaker.",
+    "historyUpdate": "History last queried",
+    "openOrders": "Open orders",
+    "remaining": "Remaining",
+    "expires": "Expires",
+    "noOrders": "This account has no open orders.",
+    "executed": "Executed trades",
+    "noFills": "No HIVE/HBD executions in the selected period.",
+    "pagination": "Executed trade pages",
+    "previous": "Previous",
+    "next": "Next",
+    "loading": "Reading account balances, orders and history. Full history may take a while.",
+    "refreshing": "Refreshing on-chain data…",
+    "refreshNote": "Balances and orders every 15 seconds; execution history every 60 seconds. Displays real on-chain activity only, not virtual paper-mode orders.",
+    "errors": {
+      "invalidAccount": "Enter a valid Hive account name without @ or spaces.",
+      "connection": "Could not refresh Hive data. Retrying in 15 seconds; you can also select Refresh.",
+      "invalidResponse": "Hive returned incomplete or invalid data. No partial result is displayed. Retry or select a shorter period.",
+      "accountNotFound": "This Hive account does not exist. Check the dedicated account name.",
+      "invalidBook": "The order book is empty or has invalid prices. Inventory cannot be valued in HBD.",
+      "historyLimit": "The period exceeds 100,000 history entries. Select a shorter period; no truncated result was calculated."
+    }
+  },
   "loading": {
     "title": "Loading",
     "subtitle": "Please wait while we load your data",
@@ -13,6 +63,7 @@
     "refreshing": "Refreshing..."
   },
   "userSelector": {
+    "botAccount": "Monitor bot account",
     "title": "User to Analyze",
     "placeholder": "Enter Hive username",
     "analyze": "Analyze",
@@ -28,10 +79,10 @@
     "operations": "Operations"
   },
   "priceDisplay": {
-    "title": "Reference Prices",
+    "title": "On-chain reference",
     "notAvailable": "Not available",
-    "fallbackNote": "Showing approximate prices due to API limitations",
-    "apiError": "Could not fetch current prices"
+    "source": "Source: Hive median feed, expressed in HIVE/HBD, without external dollar prices. The bot uses the internal market order book, not this feed.",
+    "apiError": "Could not read the Hive price feed. No fallback prices are displayed."
   },
   "dateFilter": {
     "title": "Date Filters",
@@ -55,5 +106,16 @@
   },
   "common": {
     "noUserSelected": "No user selected"
+  },
+  "orderBook": {
+    "title": "HIVE/HBD order book",
+    "readOnly": "Internal market · Read only · Every 15 s",
+    "mid": "Mid price",
+    "spread": "Spread",
+    "bids": "Buy orders (bids)",
+    "asks": "Sell orders (asks)",
+    "price": "HBD per HIVE",
+    "empty": "No orders on this side of the book.",
+    "error": "Could not refresh the book. Retrying in 15 seconds."
   }
 }

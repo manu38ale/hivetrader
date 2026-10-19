@@ -27,8 +27,6 @@ export function UserSelector({ currentUser, onUserChange, isLoading, t, lastUpda
     setInputValue(e.target.value);
   };
 
-  const popularUsers = ['manuphotos', 'blocktrades', 'steemit', 'freedom'];
-
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center">

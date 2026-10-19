@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "paper": "npm --prefix bot run paper",
+    "backtest": "npm --prefix bot run backtest",
+    "test": "npm --prefix bot test",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",

@@ -1,130 +1,73 @@
-import React from 'react';
-import { User } from 'lucide-react';
-import { useHiveData } from './hooks/useHiveData';
+import { useEffect, useState } from 'react';
+import { BarChart3, Bot } from 'lucide-react';
 import { useLanguage } from './hooks/useLanguage';
-import { TradingSummary } from './components/TradingSummary';
-import { PriceDisplay } from './components/PriceDisplay';
-import { DateFilter } from './components/DateFilter';
-import { UserSelector } from './components/UserSelector';
-import { OperationsTable } from './components/OperationsTable';
-import { LoadingSpinner, LoadingOverlay } from './components/LoadingSpinner';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { format } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { AnalysisPage } from './pages/AnalysisPage';
+import { BotPage } from './pages/BotPage';
 
-function App() {
+function currentPage(): 'analysis' | 'bot' {
+  return window.location.hash === '#/bot' ? 'bot' : 'analysis';
+}
+
+export default function App() {
   const { language, setLanguage, t } = useLanguage();
-  const {
-    operations,
-    priceData,
-    summary,
-    isLoading,
-    isPriceLoading,
-    debugInfo,
-    lastUpdate,
-    dateFilter,
-    targetUser,
-    setDateFilter,
-    setTargetUser,
-    refreshData,
-    loadingStatus
-  } = useHiveData();
-
-  const dateLocale = language === 'es' ? es : enUS;
-
-  // Solo mostrar spinner de carga completa en la primera carga
-  const [hasInitiallyLoaded, setHasInitiallyLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!isLoading && !hasInitiallyLoaded) {
-      setHasInitiallyLoaded(true);
-    }
-  }, [isLoading, hasInitiallyLoaded]);
-
-  if (!hasInitiallyLoaded && isLoading) {
-    return <LoadingSpinner statusMessage={loadingStatus} />;
-  }
+  const [page, setPage] = useState(currentPage);
+  useEffect(() => {
+    const onNavigate = () => setPage(currentPage());
+    window.addEventListener('hashchange', onNavigate);
+    return () => window.removeEventListener('hashchange', onNavigate);
+  }, []);
+  useEffect(() => {
+    document.title = `${t(`navigation.${page}`)} | ${t('header.title')}`;
+  }, [page, t]);
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Loading Overlay */}
-      <LoadingOverlay isLoading={isLoading} statusMessage={loadingStatus} />
-      
-      {/* Header */}
+    <div className="min-h-screen bg-gray-900 text-gray-200">
+      <a href="#main-content" onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus(); }} className="sr-only focus:not-sr-only focus:block focus:bg-blue-700 focus:p-3">
+        {t('navigation.skip')}
+      </a>
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-4">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">{t('header.title')}</h1>
-                <div className="flex items-center text-gray-400 text-sm">
-                  <User className="w-4 h-4 mr-1" />
-                  <span>{targetUser || t('common.noUserSelected')}</span>
-                </div>
-              </div>
+          <div className="flex flex-wrap justify-between items-center gap-4 py-6">
+            <div className="flex items-center gap-3">
+              <div aria-hidden="true" className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold">H</div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">{t('header.title')}</h1>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <LanguageSwitcher 
-                currentLanguage={language}
-                onLanguageChange={setLanguage}
-              />
-            </div>
+            <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
           </div>
+          <nav aria-label={t('navigation.main')} className="flex gap-2">
+            {(['analysis', 'bot'] as const).map(item => {
+              const Icon = item === 'analysis' ? BarChart3 : Bot;
+              return (
+                <a
+                  key={item}
+                  href={`#/${item}`}
+                  aria-current={page === item ? 'page' : undefined}
+                  className={`flex items-center gap-2 px-4 py-3 border-b-2 text-sm sm:text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400 ${
+                    page === item ? 'border-blue-400 text-white' : 'border-transparent text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <Icon aria-hidden="true" className="w-4 h-4" />{t(`navigation.${item}`)}
+                </a>
+              );
+            })}
+          </nav>
         </div>
       </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* User Selector */}
-          <UserSelector 
-            currentUser={targetUser}
-            onUserChange={setTargetUser}
-            isLoading={isLoading}
-            t={t}
-            lastUpdate={lastUpdate}
-            dateLocale={dateLocale}
-          />
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TradingSummary summary={summary} isLoading={isLoading} t={t} />
-            <PriceDisplay priceData={priceData} isLoading={isPriceLoading} t={t} />
-          </div>
-
-          {/* Date Filter */}
-          <DateFilter 
-            dateFilter={dateFilter} 
-            onDateFilterChange={setDateFilter} 
-            t={t}
-          />
-
-          {/* Operations Table */}
-          <OperationsTable 
-            operations={operations} 
-            isLoading={isLoading} 
-            t={t}
-            dateLocale={dateLocale}
-          />
-
+      <main id="main-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div hidden={page !== 'analysis'}>
+          <AnalysisPage language={language} t={t} />
+        </div>
+        <div hidden={page !== 'bot'}>
+          <BotPage active={page === 'bot'} language={language} t={t} />
         </div>
       </main>
-
-      {/* Footer */}
       <footer className="bg-gray-800 border-t border-gray-700 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-gray-400 text-sm">
-            <p>{t('footer.description')}</p>
-            <p className="mt-1">{t('footer.updateInterval')}</p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400 text-sm">
+          <p>{t('footer.description')}</p>
+          <p className="mt-1">{t(page === 'bot' ? 'bot.refreshNote' : 'footer.updateInterval')}</p>
         </div>
       </footer>
     </div>
   );
 }
-
-export default App;

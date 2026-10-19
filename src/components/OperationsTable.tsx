@@ -11,14 +11,21 @@ interface OperationsTableProps {
   isLoading: boolean;
   t: (key: string) => string;
   dateLocale: Locale;
+  title?: string;
+  emptyDescription?: string;
+  totalCount?: number;
+  priceDecimals?: 3 | 6;
+  priceLabel?: string;
 }
 
-export function OperationsTable({ operations, isLoading, t, dateLocale }: OperationsTableProps) {
+export function OperationsTable({
+  operations, isLoading, t, dateLocale, title, emptyDescription, totalCount, priceDecimals = 3, priceLabel,
+}: OperationsTableProps) {
   return (
     <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
       <div className="p-6 border-b border-gray-700">
         <h3 className="text-lg font-semibold text-white">
-          {t('operationsTable.title')} {!isLoading && `(${operations.length})`}
+          {title ?? t('operationsTable.title')} {!isLoading && `(${totalCount ?? operations.length})`}
         </h3>
       </div>
       
@@ -39,7 +46,7 @@ export function OperationsTable({ operations, isLoading, t, dateLocale }: Operat
                 HBD
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                {t('operationsTable.price')}
+                {priceLabel ?? t('operationsTable.price')}
               </th>
             </tr>
           </thead>
@@ -54,7 +61,7 @@ export function OperationsTable({ operations, isLoading, t, dateLocale }: Operat
                 <td colSpan={5} className="px-6 py-8 text-center">
                   <div className="text-gray-400 text-lg">{t('operationsTable.noOperations')}</div>
                   <div className="text-gray-500 text-sm mt-2">
-                    {t('operationsTable.adjustFilters')}
+                    {emptyDescription ?? t('operationsTable.adjustFilters')}
                   </div>
                 </td>
               </tr>
@@ -89,7 +96,7 @@ export function OperationsTable({ operations, isLoading, t, dateLocale }: Operat
                     {formatCurrency(operation.hbdAmount)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300 font-mono">
-                    {formatCurrency(operation.price)}
+                    {priceDecimals === 6 ? operation.price.toFixed(6) : formatCurrency(operation.price)}
                   </td>
                 </tr>
               ))
