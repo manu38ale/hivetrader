@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "spread-report": "npm --prefix bot run spread-report",
     "paper": "npm --prefix bot run paper",
     "backtest": "npm --prefix bot run backtest",
     "test": "npm --prefix bot test",

@@ -5,6 +5,8 @@ import { Rpc, readBalances, readBook, readOrders } from './market.js';
 import { checkRisk } from './risk.js';
 import { openState } from './state.js';
 import { decide, equity, totalBalances } from './strategy.js';
+import { appendSpreadSample } from './spreadHistory.js';
+import { createNotifier, riskNotifications } from './notify.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -21,15 +23,31 @@ async function main(): Promise<void> {
   process.once('SIGTERM', stop);
   const rpc = new Rpc(config.nodes);
   try {
-    const executor = new Executor(config, rpc, store.state, store.save, process.env.BOT_ACTIVE_KEY);
+    const notify = createNotifier(config.account);
+    const executor = new Executor(config, rpc, store.state, store.save, process.env.BOT_ACTIVE_KEY, notify);
     const started = Date.now();
     console.log(JSON.stringify({ event: 'started', account: config.account, paper: config.paper }));
+    await notify('started', `${config.paper ? 'Paper' : 'Live'} mode; polling every ${config.pollIntervalSec}s${store.state.risk?.halted ? '; persisted risk halt requires manual review' : ''}`);
     while (!stopping && (!duration || Date.now() - started < duration * 1000)) {
       const cycleStarted = Date.now();
       try {
-        const [book, chainOrders, balances] = await Promise.all([
-          readBook(rpc), readOrders(rpc, config.account), readBalances(rpc, config.account),
+        const [market, openOrders, accountBalances] = await Promise.allSettled([
+          readBook(rpc).then(book => ({ book, time: Date.now() })),
+          readOrders(rpc, config.account), readBalances(rpc, config.account),
         ]);
+        if (market.status === 'rejected') throw market.reason;
+        const { book, time } = market.value;
+        try {
+          await appendSpreadSample(config.stateDir, {
+            time: new Date(time).toISOString(), mid: book.mid, spreadPct: book.spreadPct,
+          });
+        } catch {
+          console.error(JSON.stringify({ event: 'spread_history_failed', action: 'check STATE_DIR permissions and disk space' }));
+        }
+        if (openOrders.status === 'rejected') throw openOrders.reason;
+        if (accountBalances.status === 'rejected') throw accountBalances.reason;
+        const chainOrders = openOrders.value;
+        const balances = accountBalances.value;
         const now = Date.now();
         if (config.paper) {
           executor.initializePaper({
@@ -43,9 +61,14 @@ async function main(): Promise<void> {
         for (const order of orders) {
           store.state.lastOrderId = Math.max(store.state.lastOrderId, order.id);
         }
-        const risk = checkRisk(store.state.risk, now, book.mid,
+        const previousRisk = store.state.risk;
+        const risk = checkRisk(previousRisk, now, book.mid,
           equity(totalBalances(free, orders), book.mid), config);
         store.state.risk = risk.state;
+        await store.save();
+        for (const notification of riskNotifications(previousRisk, risk.state, now, risk.dailyPnl, config)) {
+          await notify(notification.event, notification.reason, now);
+        }
         const activeIds = new Set(orders.map(order => String(order.id)));
         for (const id of Object.keys(store.state.anchors)) {
           if (!activeIds.has(id)) delete store.state.anchors[id];
@@ -80,10 +103,14 @@ async function main(): Promise<void> {
       }
     }
     const orders = config.paper ? executor.paperOrders : await readOrders(rpc, config.account);
-    await executor.execute({
+    const shutdown = await executor.execute({
       cancel: orders.map(order => order.id), create: [], reason: 'shutdown', spreadPct: 0, skew: 0,
     }, 0, Date.now());
+    if (shutdown === 'insufficient_rc' || shutdown === 'rc_unavailable') {
+      throw new Error('Shutdown could not cancel orders due to RC pre-check; inspect remaining chain orders manually');
+    }
     console.log(JSON.stringify({ event: 'stopped', paper: config.paper }));
+    await notify('stopped', `Clean shutdown in ${config.paper ? 'paper' : 'live'} mode; managed orders cancelled`);
   } finally {
     await store.release();
     process.removeListener('SIGINT', stop);

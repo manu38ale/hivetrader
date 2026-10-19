@@ -83,3 +83,46 @@ export async function readBalances(rpc: Rpc, account: string): Promise<Balances>
   if (!found) throw new Error('BOT_ACCOUNT not found');
   return { hive: parseAsset(found.balance).amount, hbd: parseAsset(found.hbd_balance).amount };
 }
+
+export interface RcBalance { current: bigint; max: bigint }
+export type MarketOperation = 'limit_order_create' | 'limit_order_cancel';
+
+function rcInteger(value: unknown): bigint {
+  if (typeof value === 'number' && Number.isSafeInteger(value)) return BigInt(value);
+  if (typeof value === 'string' && /^-?\d+$/.test(value)) return BigInt(value);
+  throw new Error('Invalid RC integer; expected a safe integer or decimal string');
+}
+
+export async function readRc(rpc: Rpc, account: string, now = Date.now()): Promise<RcBalance> {
+  const result = await rpc.read<{
+    rc_accounts: { account: string; rc_manabar: { current_mana: unknown; last_update_time: unknown }; max_rc: unknown }[];
+  }>('rc_api', 'find_rc_accounts', { accounts: [account] });
+  const found = result.rc_accounts[0];
+  if (!found || found.account !== account || !Number.isFinite(now) || now < 0) {
+    throw new Error('RC account unavailable or invalid observation time');
+  }
+  const max = rcInteger(found.max_rc);
+  const mana = rcInteger(found.rc_manabar.current_mana);
+  const lastUpdate = rcInteger(found.rc_manabar.last_update_time);
+  if (max < 0n || lastUpdate < 0n) throw new Error('Invalid RC manabar');
+  const seconds = BigInt(Math.floor(now / 1000));
+  const elapsed = seconds > lastUpdate ? seconds - lastUpdate : 0n;
+  // Hive regenerates the RC manabar over five days; API mana is stored at last_update_time.
+  const regenerated = mana + max * elapsed / 432000n;
+  return { current: regenerated < 0n ? 0n : regenerated > max ? max : regenerated, max };
+}
+
+export async function estimateRcCost(rpc: Rpc, operations: MarketOperation[]): Promise<bigint> {
+  if (!operations.length) throw new Error('Cannot estimate an empty transaction');
+  const costs = new Map<MarketOperation, bigint>();
+  await Promise.all([...new Set(operations)].map(async operation => {
+    const stats = await rpc.read<{ count: unknown; avg_cost_rc: unknown }>(
+      'rc_api', 'get_rc_operation_stats', { operation: `${operation}_operation` },
+    );
+    const cost = rcInteger(stats.avg_cost_rc);
+    if (rcInteger(stats.count) <= 0n || cost <= 0n) throw new Error('RC operation cost statistics unavailable');
+    costs.set(operation, cost);
+  }));
+  // Dynamic per-operation averages with 2x headroom, including all operations in a requote.
+  return operations.reduce((sum, operation) => sum + costs.get(operation)!, 0n) * 2n;
+}
